@@ -79,7 +79,7 @@ NOT_PUBLISHED = HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "results not 
 @app.get("/healthz")
 async def healthz():
     """Liveness: the process is up. Never touches Redis."""
-    return {"status": "ok"}
+    return {"status": "ok", "version": "0.2"}
 
 
 @app.get("/readyz")
