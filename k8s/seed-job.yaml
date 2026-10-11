@@ -1,0 +1,19 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: seed
+spec:
+  backoffLimit: 3
+  template:
+    spec:
+      restartPolicy: Never
+      enableServiceLinks: false
+      securityContext:
+        runAsNonRoot: true
+      containers:
+        - name: seed
+          image: navidad-api:0.1
+          command: ["python", "-m", "app.seed"]
+          env:
+            - name: REDIS_HOST
+              value: redis
