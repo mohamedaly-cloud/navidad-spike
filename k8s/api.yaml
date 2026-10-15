@@ -21,9 +21,10 @@ spec:
         runAsNonRoot: true
       containers:
         - name: api
-          image: navidad-api:0.2
+          image: navidad-api:0.3
           ports:
-            - containerPort: 8000
+            - name: http
+              containerPort: 8000
           env:
             - name: REDIS_HOST
               value: redis
