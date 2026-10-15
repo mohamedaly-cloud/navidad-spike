@@ -153,7 +153,7 @@ kubectl apply -f k8s/hpa.yaml                           # back to normal
 ## Author
 
 **Mohamed Aly**
-*AWS Certified Solutions Architect (SAA-C03) | Site Reliability Engineer*
+*Junior Site Reliability & Cloud Engineer | AWS Certified Solutions Architect – Associate (SAA-C03)*
 
 Built with focused intent in Barcelona, Spain.
 [LinkedIn](https://www.linkedin.com/in/mohamed-aly-cloud/) | [GitHub](https://github.com/mohamedaly-cloud)

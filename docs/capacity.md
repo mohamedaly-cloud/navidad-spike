@@ -33,7 +33,7 @@ Setup: one pod (CPU request 100m, limit 500m), loaded directly by its pod IP wit
 
 - **Ceiling: ~645 req/s per pod.** The pod is CPU-bound: it used 439m of its 500m limit, so Kubernetes throttled it.
 - **Latency rises before errors appear.** Near the ceiling, p50 went from 18 ms to 97 ms (5×) while every request still returned 200. Requests were queueing for CPU.
-- **Planning number: 400 req/s per pod** (~62% of the ceiling). This leaves room for queueing, the HPA's ~40 s reaction time (measured under load), and losing a pod.
+- **Planning number: 400 req/s per pod** (~62% of the ceiling). This leaves room for queueing, the HPA's reaction time (~40 s in this test; 1.5–2 minutes to reach 8 pods in the spike runs, see `docs/load-test-report.md`), and losing a pod.
 
 ## Pods needed (production)
 
@@ -47,7 +47,7 @@ With pods spread across 3 Availability Zones, losing one zone must leave enough 
 38 pods ÷ 2 surviving zones = 19 per zone × 3 zones = 57 pods
 ```
 
-57 pods × 0.5 CPU ≈ 29 CPUs at peak.
+57 pods × 0.5 CPU (the limit used in this measurement) ≈ 29 CPUs at peak. The limit was later raised to 1 CPU (`docs/load-test-report.md`, finding 4), so the per-pod ceiling and this total should be measured again.
 
 ## Next bottleneck: Redis (measured)
 
