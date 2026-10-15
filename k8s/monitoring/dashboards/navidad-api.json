@@ -16,7 +16,7 @@
     {
       "id": 1,
       "type": "stat",
-      "title": "Request rate",
+      "title": "Peak request rate",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -33,9 +33,11 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(rate(http_requests_total{route=~\"/v1/.*\"}[1m]))",
+          "expr": "max_over_time(sum(rate(http_requests_total{route=~\"/v1/.*\"}[1m]))[$__range:15s])",
           "legendFormat": "",
-          "refId": "A"
+          "refId": "A",
+          "instant": true,
+          "range": false
         }
       ],
       "options": {
@@ -45,7 +47,7 @@
           ]
         },
         "colorMode": "value",
-        "graphMode": "area"
+        "graphMode": "none"
       },
       "fieldConfig": {
         "defaults": {
@@ -66,7 +68,7 @@
     {
       "id": 2,
       "type": "stat",
-      "title": "Availability (5m, SLO 99.9%)",
+      "title": "Availability (SLO 99.9%)",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -83,9 +85,11 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "1 - (sum(rate(http_requests_total{route=~\"/v1/.*\",status=~\"5..\"}[5m])) or vector(0)) / sum(rate(http_requests_total{route=~\"/v1/.*\"}[5m]))",
+          "expr": "1 - (sum(increase(http_requests_total{route=~\"/v1/.*\",status=~\"5..\"}[$__range])) or vector(0)) / sum(increase(http_requests_total{route=~\"/v1/.*\"}[$__range]))",
           "legendFormat": "",
-          "refId": "A"
+          "refId": "A",
+          "instant": true,
+          "range": false
         }
       ],
       "options": {
@@ -95,7 +99,7 @@
           ]
         },
         "colorMode": "value",
-        "graphMode": "area"
+        "graphMode": "none"
       },
       "fieldConfig": {
         "defaults": {
@@ -113,7 +117,7 @@
               }
             ]
           },
-          "decimals": 3
+          "decimals": 2
         },
         "overrides": []
       }
@@ -121,7 +125,7 @@
     {
       "id": 3,
       "type": "stat",
-      "title": "Requests under 300 ms (5m, SLO 99%)",
+      "title": "Requests under 300 ms (SLO 99%)",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -138,9 +142,11 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(rate(http_request_duration_seconds_bucket{route=~\"/v1/.*\",le=\"0.3\"}[5m])) / sum(rate(http_request_duration_seconds_count{route=~\"/v1/.*\"}[5m]))",
+          "expr": "sum(increase(http_request_duration_seconds_bucket{route=~\"/v1/.*\",le=\"0.3\"}[$__range])) / sum(increase(http_request_duration_seconds_count{route=~\"/v1/.*\"}[$__range]))",
           "legendFormat": "",
-          "refId": "A"
+          "refId": "A",
+          "instant": true,
+          "range": false
         }
       ],
       "options": {
@@ -150,7 +156,7 @@
           ]
         },
         "colorMode": "value",
-        "graphMode": "area"
+        "graphMode": "none"
       },
       "fieldConfig": {
         "defaults": {
@@ -176,7 +182,7 @@
     {
       "id": 4,
       "type": "stat",
-      "title": "API pods (HPA)",
+      "title": "Peak API pods",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -193,9 +199,11 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "kube_horizontalpodautoscaler_status_current_replicas{horizontalpodautoscaler=\"api\"}",
+          "expr": "max_over_time(kube_horizontalpodautoscaler_status_current_replicas{horizontalpodautoscaler=\"api\"}[$__range])",
           "legendFormat": "",
-          "refId": "A"
+          "refId": "A",
+          "instant": true,
+          "range": false
         }
       ],
       "options": {
@@ -205,7 +213,7 @@
           ]
         },
         "colorMode": "value",
-        "graphMode": "area"
+        "graphMode": "none"
       },
       "fieldConfig": {
         "defaults": {
@@ -222,7 +230,8 @@
                 "value": 8
               }
             ]
-          }
+          },
+          "decimals": 0
         },
         "overrides": []
       }
@@ -313,7 +322,8 @@
             "fillOpacity": 10,
             "lineWidth": 2
           },
-          "min": 0
+          "min": 0,
+          "max": 1
         },
         "overrides": []
       }
@@ -514,7 +524,7 @@
     {
       "id": 10,
       "type": "timeseries",
-      "title": "Redis-dependent 503s",
+      "title": "503s (Redis or draw unavailable)",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
