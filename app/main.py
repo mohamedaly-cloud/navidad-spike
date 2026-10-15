@@ -3,12 +3,14 @@
 import json
 import logging
 import os
+import time
 from contextlib import asynccontextmanager
 from typing import Annotated
 
 import redis.asyncio as redis
 from fastapi import FastAPI, HTTPException, Path, Request, Response, status
 from fastapi.responses import JSONResponse
+from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_latest
 from pydantic import BaseModel
 from redis.exceptions import RedisError
 
@@ -35,6 +37,39 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Navidad results API", lifespan=lifespan)
+
+
+# --- Metrics ---
+
+REQUESTS = Counter(
+    "http_requests_total", "HTTP requests handled", ["method", "route", "status"]
+)
+# Includes a 0.3 s bucket to match the latency SLO (docs/slos.md)
+LATENCY = Histogram(
+    "http_request_duration_seconds", "HTTP request duration", ["method", "route"],
+    buckets=(0.005, 0.01, 0.025, 0.05, 0.1, 0.2, 0.3, 0.5, 1, 2.5),
+)
+
+
+@app.middleware("http")
+async def record_metrics(request: Request, call_next):
+    start = time.perf_counter()
+    status_code = 500  # counted as 500 if the handler raises
+    try:
+        response = await call_next(request)
+        status_code = response.status_code
+        return response
+    finally:
+        # Route template, not raw path, to keep label cardinality bounded
+        route = request.scope.get("route")
+        label = route.path if route else "unmatched"
+        LATENCY.labels(request.method, label).observe(time.perf_counter() - start)
+        REQUESTS.labels(request.method, label, str(status_code)).inc()
+
+
+@app.get("/metrics", include_in_schema=False)
+async def metrics():
+    return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 
 # --- Response models ---
@@ -79,7 +114,7 @@ NOT_PUBLISHED = HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "results not 
 @app.get("/healthz")
 async def healthz():
     """Liveness: the process is up. Never touches Redis."""
-    return {"status": "ok", "version": "0.2"}
+    return {"status": "ok", "version": "0.3"}
 
 
 @app.get("/readyz")
