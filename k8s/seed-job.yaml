@@ -12,7 +12,7 @@ spec:
         runAsNonRoot: true
       containers:
         - name: seed
-          image: navidad-api:0.4
+          image: navidad-api:0.5
           command: ["python", "-m", "app.seed"]
           env:
             - name: REDIS_HOST

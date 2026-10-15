@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Navidad Results</title>
+<meta name="description" content="Check a Lotería de Navidad ticket against the published draw.">
+<style>
+  :root {
+    --bg: #f6f4ef;
+    --surface: #ffffff;
+    --text: #1d1b16;
+    --muted: #6b665c;
+    --border: #e4dfd3;
+    --accent: #b8860b;
+    --accent-strong: #8a6406;
+    --win: #1f7a4d;
+    --win-bg: #e8f5ee;
+    --error: #b42318;
+    --error-bg: #fdecea;
+    --radius: 14px;
+    color-scheme: light dark;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141310;
+      --surface: #1e1c18;
+      --text: #f2eee6;
+      --muted: #a39d90;
+      --border: #34302a;
+      --accent: #e0b24a;
+      --accent-strong: #f0c866;
+      --win: #5fd39a;
+      --win-bg: #15291f;
+      --error: #ff8a80;
+      --error-bg: #2d1615;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 760px; margin: 0 auto; padding: 48px 16px 64px; }
+  header { text-align: center; margin-bottom: 32px; }
+  .eyebrow {
+    color: var(--accent-strong);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+  }
+  h1 { font-size: clamp(28px, 6vw, 40px); margin: 8px 0 8px; letter-spacing: -.02em; }
+  header p { color: var(--muted); margin: 0; }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+  form { display: flex; gap: 12px; flex-wrap: wrap; }
+  label { display: block; font-weight: 600; margin-bottom: 10px; }
+  input {
+    flex: 1 1 220px;
+    min-width: 0;
+    font: 600 28px/1 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    letter-spacing: .3em;
+    text-align: center;
+    padding: 14px 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--bg);
+    color: var(--text);
+  }
+  input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  button {
+    flex: 0 0 auto;
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 600;
+    padding: 0 28px;
+    min-height: 58px;
+    border: 0;
+    border-radius: 10px;
+    background: var(--accent);
+    color: #1d1b16;
+    cursor: pointer;
+  }
+  button:hover { background: var(--accent-strong); }
+  button:disabled { opacity: .6; cursor: progress; }
+  .hint { color: var(--muted); font-size: 14px; margin: 10px 0 0; }
+  #result:empty { display: none; }
+  .result-total { font-size: 32px; font-weight: 700; margin: 4px 0 12px; }
+  .result.win { border-color: var(--win); background: var(--win-bg); }
+  .result.win .result-total { color: var(--win); }
+  .result.error { border-color: var(--error); background: var(--error-bg); color: var(--error); }
+  .number { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; letter-spacing: .08em; }
+  ul.prizes { list-style: none; padding: 0; margin: 0; }
+  ul.prizes li {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 0;
+    border-top: 1px solid var(--border);
+  }
+  h2 { font-size: 18px; margin: 0 0 16px; }
+  .top3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+  .top3 div { border: 1px solid var(--border); border-radius: 10px; padding: 14px; text-align: center; }
+  .top3 .gordo { border-color: var(--accent); }
+  .top3 span { display: block; color: var(--muted); font-size: 13px; }
+  .top3 strong { font-size: clamp(18px, 4.5vw, 26px); }
+  dl { display: grid; grid-template-columns: max-content 1fr; gap: 8px 16px; margin: 0; }
+  dt { color: var(--muted); }
+  dd { margin: 0; overflow-wrap: anywhere; }
+  footer { text-align: center; color: var(--muted); font-size: 13px; margin-top: 32px; }
+  @media (max-width: 480px) {
+    .card { padding: 18px; }
+    button { width: 100%; }
+    .top3 { gap: 8px; }
+    .top3 div { padding: 10px 4px; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="eyebrow">Sorteo Extraordinario de Navidad</div>
+    <h1>Check your ticket</h1>
+    <p>Enter the five digits of your décimo to see what it won.</p>
+  </header>
+
+  <section class="card">
+    <form id="check">
+      <label for="number" style="flex-basis:100%;margin:0">Ticket number</label>
+      <input id="number" name="number" inputmode="numeric" autocomplete="off"
+             maxlength="5" pattern="\d{5}" placeholder="00000" required>
+      <button type="submit">Check</button>
+    </form>
+    <p class="hint">Amounts are per décimo (one 20 € ticket). Prizes add up.</p>
+  </section>
+
+  <section id="result" aria-live="polite"></section>
+
+  <section class="card" id="draw">
+    <h2>Results</h2>
+    <p class="hint" id="draw-status">Loading the draw…</p>
+  </section>
+
+  <footer>Simulated draw for a load-testing project. Not affiliated with SELAE.</footer>
+</main>
+
+<script>
+  const CATEGORY = {
+    first: "First prize (El Gordo)",
+    second: "Second prize",
+    third: "Third prize",
+    fourth: "Fourth prize",
+    fifth: "Fifth prize",
+    pedrea: "Pedrea",
+    approx_first: "Next to El Gordo",
+    approx_second: "Next to the second prize",
+    approx_third: "Next to the third prize",
+    hundred_first: "Same hundred as El Gordo",
+    hundred_second: "Same hundred as the second prize",
+    hundred_third: "Same hundred as the third prize",
+    hundred_fourth: "Same hundred as a fourth prize",
+    last_two_first: "Last two digits of El Gordo",
+    last_two_second: "Last two digits of the second prize",
+    last_two_third: "Last two digits of the third prize",
+    refund: "Refund (reintegro)",
+  };
+  const euros = new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR", maximumFractionDigits: 0, useGrouping: "always" });
+  const $ = (id) => document.getElementById(id);
+
+  function el(tag, attrs = {}, ...children) {
+    const node = document.createElement(tag);
+    Object.assign(node, attrs);
+    node.append(...children);
+    return node;
+  }
+
+  async function getJSON(path) {
+    const res = await fetch(path, { headers: { Accept: "application/json" } });
+    const body = await res.json().catch(() => ({}));
+    return { status: res.status, body };
+  }
+
+  function showError(message) {
+    $("result").replaceChildren(el("div", { className: "card result error", role: "alert" }, message));
+  }
+
+  function errorMessage(status, body) {
+    if (status === 503) {
+      return body.detail === "results not published yet"
+        ? "Results have not been published yet. Try again in a moment."
+        : "The service is busy right now. Try again in a moment.";
+    }
+    if (status === 422) return "A ticket number has exactly five digits.";
+    return "Something went wrong. Try again in a moment.";
+  }
+
+  $("number").addEventListener("input", (e) => {
+    e.target.value = e.target.value.replace(/\D/g, "").slice(0, 5);
+  });
+
+  $("check").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const number = $("number").value.padStart(5, "0");
+    $("number").value = number;
+    const button = e.target.querySelector("button");
+    button.disabled = true;
+    try {
+      const { status, body } = await getJSON(`/v1/tickets/${number}`);
+      if (status !== 200) return showError(errorMessage(status, body));
+
+      const won = body.total_eur > 0;
+      const card = el("div", { className: `card result${won ? " win" : ""}` },
+        el("div", {}, "Ticket ", el("span", { className: "number" }, body.number)),
+        el("div", { className: "result-total" }, won ? euros.format(body.total_eur) : "No prize"));
+      if (won) {
+        card.append(el("ul", { className: "prizes" }, ...body.prizes.map((p) =>
+          el("li", {}, el("span", {}, CATEGORY[p.category] ?? p.category), el("strong", {}, euros.format(p.amount_eur))))));
+      } else {
+        card.append(el("p", { className: "hint" }, "This number did not win anything in this draw."));
+      }
+      $("result").replaceChildren(card);
+    } catch {
+      showError("Could not reach the service. Check your connection and try again.");
+    } finally {
+      button.disabled = false;
+    }
+  });
+
+  async function loadDraw() {
+    try {
+      const { status, body } = await getJSON("/v1/results");
+      if (status !== 200) {
+        $("draw-status").textContent = errorMessage(status, body);
+        return;
+      }
+      const top = (label, number, extra = "") =>
+        el("div", { className: extra }, el("span", {}, label), el("strong", { className: "number" }, number));
+      const row = (term, value) => [el("dt", {}, term), el("dd", { className: "number" }, value)];
+      $("draw").replaceChildren(
+        el("h2", {}, "Results"),
+        el("div", { className: "top3" },
+          top("El Gordo", body.first, "gordo"), top("Second", body.second), top("Third", body.third)),
+        el("dl", {},
+          ...row("Fourth", body.fourth.join("  ")),
+          ...row("Fifth", body.fifth.join("  ")),
+          el("dt", {}, "Pedrea"),
+          el("dd", {}, `${body.pedrea.length.toLocaleString("en")} numbers`)));
+    } catch {
+      $("draw-status").textContent = "Could not reach the service.";
+    }
+  }
+
+  loadDraw();
+</script>
+</body>
+</html>

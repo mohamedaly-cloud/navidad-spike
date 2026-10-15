@@ -21,7 +21,7 @@ spec:
         runAsNonRoot: true
       containers:
         - name: api
-          image: navidad-api:0.4
+          image: navidad-api:0.5
           ports:
             - name: http
               containerPort: 8000

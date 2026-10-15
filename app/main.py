@@ -9,13 +9,14 @@ from typing import Annotated
 
 import redis.asyncio as redis
 from fastapi import FastAPI, HTTPException, Path, Request, Response, status
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
 from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_latest
 from pydantic import BaseModel
 from redis.exceptions import RedisError
 
 from app.prizes import AMOUNTS
 
+INDEX_HTML = os.path.join(os.path.dirname(__file__), "static", "index.html")
 DRAW_KEY = "navidad:draw"
 PRIZES_KEY = "navidad:prizes"
 
@@ -118,7 +119,7 @@ NOT_PUBLISHED = HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "results not 
 @app.get("/healthz")
 async def healthz():
     """Liveness: the process is up. Never touches Redis."""
-    return {"status": "ok", "version": "0.4"}
+    return {"status": "ok", "version": "0.5"}
 
 
 @app.get("/readyz")
@@ -163,3 +164,10 @@ async def check_ticket(number: Annotated[str, Path(pattern=r"^\d{5}$")]):
 
     prizes = [Prize(category=c, amount_eur=AMOUNTS[c]) for c in json.loads(categories or "[]")]
     return TicketResult(number=number, prizes=prizes, total_eur=sum(p.amount_eur for p in prizes))
+
+
+# --- Frontend ---
+
+@app.get("/", include_in_schema=False)
+async def index():
+    return FileResponse(INDEX_HTML)
