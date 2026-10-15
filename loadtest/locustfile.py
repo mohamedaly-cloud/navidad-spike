@@ -27,14 +27,14 @@ class DrawMorning(LoadTestShape):
     """Baseline, build-up, the Gordo spike, a sustained peak, then decay."""
 
     # (end time in seconds, users, spawn rate per second)
-    stages = [
+    stages = (
         (120, 150, 10),     # before the draw
         (240, 500, 5),      # build-up as the draw starts
         (300, 1500, 100),   # El Gordo is announced
         (540, 1500, 100),   # sustained peak
         (660, 300, 20),     # decay
         (720, 300, 20),
-    ]
+    )
 
     def tick(self):
         run_time = self.get_run_time()
