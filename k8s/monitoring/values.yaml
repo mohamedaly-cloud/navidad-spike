@@ -1,0 +1,49 @@
+# kube-prometheus-stack 91.8.2, sized for a single-node minikube.
+# helm install monitoring prometheus-community/kube-prometheus-stack \
+#   --version 91.8.2 -n monitoring --create-namespace -f k8s/monitoring/values.yaml
+
+alertmanager:
+  enabled: false
+
+defaultRules:
+  create: false
+
+# Control-plane components are not reachable for scraping on minikube.
+kubeEtcd:
+  enabled: false
+kubeScheduler:
+  enabled: false
+kubeControllerManager:
+  enabled: false
+kubeProxy:
+  enabled: false
+
+prometheus:
+  prometheusSpec:
+    scrapeInterval: 15s
+    retention: 2d
+    # Pick up PodMonitors and ServiceMonitors without the Helm release label.
+    podMonitorSelectorNilUsesHelmValues: false
+    serviceMonitorSelectorNilUsesHelmValues: false
+    resources:
+      requests:
+        cpu: 200m
+        memory: 512Mi
+      limits:
+        memory: 1Gi
+
+grafana:
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      memory: 256Mi
+  sidecar:
+    datasources:
+      alertmanager:
+        enabled: false
+    dashboards:
+      enabled: true
+      label: grafana_dashboard
+      labelValue: "1"
