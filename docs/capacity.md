@@ -79,6 +79,6 @@ The laptop has 12 CPUs, shared with the load generator, so the full 29 CPUs won'
 
 ## Findings and ideas
 
-- **CPU request is too low.** The request is 100m, but a pod serving 400 req/s uses several times that. The scheduler packs pods by request, so the node is overcommitted under load, and the HPA (80% of the request) reacts at a very low load. Rightsize the request from measured usage.
+- **CPU request is too low.** The request is 100m, but a pod serving 400 req/s uses several times that. The scheduler packs pods by request, so the node is overcommitted under load, and the HPA (80% of the request) reacts at a very low load. Rightsize the request from measured usage (now 250m, see `docs/load-test-report.md`, finding 4).
 - **Cache the answers.** There are only 100,000 possible ticket numbers and the results are the same for everyone, so almost every response can be cached at a CDN (e.g. CloudFront). Most of the 15,000 req/s would then never reach the pods.
 - **Pre-scale.** Raise `minReplicas` before 08:00 on 22 December instead of waiting for the HPA (see `docs/slos.md`).
