@@ -24,14 +24,18 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # One client and connection pool per process
-    app.state.redis = redis.Redis(
+    # One client and connection pool per process. Under a burst, requests wait
+    # briefly for a free connection instead of failing with "Too many connections".
+    pool = redis.BlockingConnectionPool(
         host=os.getenv("REDIS_HOST", "localhost"),
         port=int(os.getenv("REDIS_PORT", "6379")),
+        max_connections=50,
+        timeout=2,
         socket_connect_timeout=1,  # fail fast instead of hanging a request or a probe
         socket_timeout=1,
         decode_responses=True,
     )
+    app.state.redis = redis.Redis.from_pool(pool)
     yield
     await app.state.redis.aclose()
 
@@ -114,7 +118,7 @@ NOT_PUBLISHED = HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "results not 
 @app.get("/healthz")
 async def healthz():
     """Liveness: the process is up. Never touches Redis."""
-    return {"status": "ok", "version": "0.3"}
+    return {"status": "ok", "version": "0.4"}
 
 
 @app.get("/readyz")
